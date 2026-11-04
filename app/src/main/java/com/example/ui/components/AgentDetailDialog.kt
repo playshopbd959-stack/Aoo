@@ -130,6 +130,20 @@ fun AgentDetailDialog(
                             fontSize = 12.sp,
                             color = CyberCyan
                         )
+                        if (!agent.lastExecutionOutput.isNullOrBlank()) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "LATEST COMPUTATION OUTPUT",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = TextMuted
+                            )
+                            Text(
+                                text = agent.lastExecutionOutput,
+                                fontFamily = MonospaceFont,
+                                fontSize = 11.sp,
+                                color = CyberGreen
+                            )
+                        }
                     }
                 }
 

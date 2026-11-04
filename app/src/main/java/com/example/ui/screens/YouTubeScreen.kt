@@ -19,11 +19,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -44,9 +40,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import com.example.data.model.CommentCluster
 import com.example.data.model.PersonaSimulation
+import com.example.data.model.RecommendationItem
 import com.example.data.model.RetentionPoint
+import com.example.data.model.TitleVariation
 import com.example.data.model.VideoAnalysisEntity
 import com.example.ui.MainViewModel
 import com.example.ui.components.CyberButton
@@ -55,7 +52,6 @@ import com.example.ui.components.MetricBox
 import com.example.ui.components.RetentionCurveChart
 import com.example.ui.components.SectionHeader
 import com.example.ui.theme.CardBorder
-import com.example.ui.theme.CardBorderActive
 import com.example.ui.theme.CyberCyan
 import com.example.ui.theme.CyberDark
 import com.example.ui.theme.CyberGreen
@@ -66,7 +62,6 @@ import com.example.ui.theme.OffWhite
 import com.example.ui.theme.PureBlack
 import com.example.ui.theme.PureWhite
 import com.example.ui.theme.SurfaceDark
-import com.example.ui.theme.SurfaceVariantDark
 import com.example.ui.theme.TextMuted
 import java.text.NumberFormat
 import java.util.Locale
@@ -95,12 +90,12 @@ fun YouTubeScreen(
             Spacer(modifier = Modifier.height(8.dp))
             Column {
                 Text(
-                    text = "YOUTUBE INTELLIGENCE",
+                    text = "REAL YOUTUBE INTELLIGENCE",
                     style = MaterialTheme.typography.headlineMedium,
                     color = PureWhite
                 )
                 Text(
-                    text = "1,000-AGENT SIMULATED VIEWER BEHAVIOR SANDBOX",
+                    text = "OFFICIAL API RETRIEVAL & REAL AGENT VIDEO AUDIT",
                     fontFamily = MonospaceFont,
                     fontSize = 10.sp,
                     color = TextMuted
@@ -108,26 +103,26 @@ fun YouTubeScreen(
             }
         }
 
-        // Compliance Banner (Mandatory safety requirement)
+        // Compliance & Ground-Truth Transparency Notice
         item {
             CyberCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .testTag("youtube_compliance_card"),
                 backgroundColor = CyberDark,
-                borderColor = CardBorder
+                borderColor = CyberGreen
             ) {
-                Column(modifier = Modifier.padding(10.dp)) {
+                Column(modifier = Modifier.padding(12.dp)) {
                     Text(
-                        text = "SAFETY PROTOCOL: ZERO FAKE ENGAGEMENT",
+                        text = "DATA INTEGRITY: ZERO FABRICATED METRICS",
                         fontFamily = MonospaceFont,
-                        fontSize = 10.sp,
+                        fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         color = CyberGreen
                     )
-                    Spacer(modifier = Modifier.height(2.dp))
+                    Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "XSOS is an analytical sandbox. Agents simulate cognitive viewer responses, retention drop-off, and sentiment in an isolated private test environment. Public metrics are never manipulated.",
+                        text = "Video metadata is retrieved live from official Google/YouTube endpoints (YouTube Data API v3 and oEmbed). Estimated values and analytical models are clearly marked as AI predictions.",
                         style = MaterialTheme.typography.bodySmall,
                         fontSize = 11.sp,
                         color = OffWhite
@@ -171,7 +166,7 @@ fun YouTubeScreen(
 
                     // Preset Buttons
                     Text(
-                        text = "PRESET TESTING LINKS",
+                        text = "QUICK TEST VIDEOS",
                         fontFamily = MonospaceFont,
                         fontSize = 9.sp,
                         color = TextMuted
@@ -192,15 +187,12 @@ fun YouTubeScreen(
                         PresetChip("Gangnam Style") {
                             urlInput = "https://www.youtube.com/watch?v=9bZkp7q19f0"
                         }
-                        PresetChip("Neural Systems (Essay)") {
-                            urlInput = "https://www.youtube.com/watch?v=kY90vR6Zt1E"
-                        }
                     }
 
                     Spacer(modifier = Modifier.height(14.dp))
 
                     CyberButton(
-                        text = if (isAnalyzing) "Simulating with 1,000 Agents..." else "Deploy 1,000 Agents On Video",
+                        text = if (isAnalyzing) "Retrieving API & Running Agents..." else "Audit Video with 1,000 Agents",
                         onClick = {
                             viewModel.analyzeYouTubeVideo(urlInput, 1000)
                         },
@@ -223,7 +215,7 @@ fun YouTubeScreen(
                             )
                             Spacer(modifier = Modifier.width(10.dp))
                             Text(
-                                text = "Running parallel neural perception pipeline...",
+                                text = "Querying live API & distributing shards to 1,000 agents...",
                                 fontFamily = MonospaceFont,
                                 fontSize = 11.sp,
                                 color = CyberCyan
@@ -249,13 +241,36 @@ fun YouTubeScreen(
             val analysis = currentAnalysis!!
             val formatter = NumberFormat.getNumberInstance(Locale.US)
 
-            // Video Info Header Card
+            // Video Info Header Card with Verification Badge
             item {
                 CyberCard(
                     modifier = Modifier.fillMaxWidth(),
-                    backgroundColor = CyberDark
+                    backgroundColor = CyberDark,
+                    borderColor = if (analysis.isVerifiedApiData) CyberGreen else CardBorder
                 ) {
                     Column(modifier = Modifier.padding(14.dp)) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = if (analysis.isVerifiedApiData) "● VERIFIED VIA OFFICIAL YOUTUBE API" else "● ESTIMATED / UNVERIFIED",
+                                fontFamily = MonospaceFont,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (analysis.isVerifiedApiData) CyberGreen else CyberYellow
+                            )
+                            Text(
+                                text = "ID: ${analysis.id}",
+                                fontFamily = MonospaceFont,
+                                fontSize = 10.sp,
+                                color = TextMuted
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
                         Row(
                             verticalAlignment = Alignment.Top,
                             modifier = Modifier.fillMaxWidth()
@@ -301,20 +316,24 @@ fun YouTubeScreen(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             modifier = Modifier.fillMaxWidth()
                         ) {
+                            val viewStr = if (analysis.viewCount > 0) "${formatter.format(analysis.viewCount)} views" else "Views: API Key Needed"
+                            val likeStr = if (analysis.likeCount > 0) "${formatter.format(analysis.likeCount)} likes" else "Likes: API Key Needed"
+                            val cmtStr = if (analysis.commentCount > 0) "${formatter.format(analysis.commentCount)} cmts" else "Cmts: API Key Needed"
+
                             Text(
-                                text = "Views: ${formatter.format(analysis.viewCount)}",
+                                text = viewStr,
                                 fontFamily = MonospaceFont,
                                 fontSize = 10.sp,
                                 color = OffWhite
                             )
                             Text(
-                                text = "Likes: ${formatter.format(analysis.likeCount)}",
+                                text = likeStr,
                                 fontFamily = MonospaceFont,
                                 fontSize = 10.sp,
                                 color = OffWhite
                             )
                             Text(
-                                text = "Comments: ${formatter.format(analysis.commentCount)}",
+                                text = cmtStr,
                                 fontFamily = MonospaceFont,
                                 fontSize = 10.sp,
                                 color = OffWhite
@@ -324,63 +343,137 @@ fun YouTubeScreen(
                 }
             }
 
-            // Key Scores
+            // Real Agent Analytical Finding Cards
             item {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    MetricBox(
-                        title = "Hook Score",
-                        value = "${analysis.overallHookScore}/100",
-                        subValue = "First 30s Retention",
-                        indicatorColor = CyberGreen,
-                        modifier = Modifier.weight(1f)
-                    )
-                    MetricBox(
-                        title = "Viral Index",
-                        value = "${analysis.viralPotentialScore}/100",
-                        subValue = "Algorithm Velocity",
-                        indicatorColor = CyberCyan,
-                        modifier = Modifier.weight(1f)
-                    )
-                    MetricBox(
-                        title = "Sentiment Ratio",
-                        value = "${(analysis.sentimentRatio * 100).toInt()}%",
-                        subValue = "Positive Valence",
-                        indicatorColor = CyberGreen,
-                        modifier = Modifier.weight(1f)
+                SectionHeader(title = "Real Agent Analytical Findings", tag = "AI EVALUATION")
+            }
+
+            // Title Analysis
+            item {
+                AnalyticalCard(
+                    title = "Title Evaluation",
+                    score = "${analysis.titleAnalysisScore}/100",
+                    description = analysis.titleFeedback,
+                    accentColor = CyberCyan
+                )
+            }
+
+            // Description Analysis
+            item {
+                AnalyticalCard(
+                    title = "Description & SEO Scan",
+                    score = "${analysis.descriptionAnalysisScore}/100",
+                    description = analysis.descriptionFeedback,
+                    accentColor = CyberGreen
+                )
+            }
+
+            // Intro Weak Points
+            if (analysis.introWeakPointWarning != null) {
+                item {
+                    AnalyticalCard(
+                        title = "Introduction & Hook Pacing",
+                        score = "${analysis.introPacingScore}/100",
+                        description = analysis.introWeakPointWarning!!,
+                        accentColor = CyberYellow
                     )
                 }
             }
 
-            // Retention Curve Chart (Interactive Canvas)
+            // Retention Curve Chart (Clearly marked as AI Predictive Model)
             item {
                 val retentionPoints = parseRetentionPoints(analysis.retentionJson)
                 RetentionCurveChart(retentionPoints = retentionPoints)
             }
 
-            // Multi-Persona Simulation Breakdown
-            item {
-                SectionHeader(title = "Simulated Persona Reactions", tag = "150 PERSONA AGENTS")
-            }
-
-            val personas = parsePersonas(analysis.personasJson)
-            personas.forEach { persona ->
+            // Title Variations (A/B Test Concepts)
+            val variations = parseTitleVariations(analysis.abVariationsJson)
+            if (variations.isNotEmpty()) {
                 item {
-                    PersonaCard(persona = persona)
+                    SectionHeader(title = "Thumbnail & Title Variations", tag = "A/B TEST CONCEPTS")
+                }
+                variations.forEach { variation ->
+                    item {
+                        CyberCard(
+                            modifier = Modifier.fillMaxWidth(),
+                            backgroundColor = SurfaceDark
+                        ) {
+                            Column(modifier = Modifier.padding(12.dp)) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text(
+                                        text = variation.concept,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = PureWhite,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = variation.predictedCtrLift,
+                                        fontFamily = MonospaceFont,
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = CyberGreen
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = variation.rationale,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = TextMuted
+                                )
+                            }
+                        }
+                    }
                 }
             }
 
-            // Comment Clusters
-            item {
-                SectionHeader(title = "Comment Topic Clusters", tag = "NLP SYNTHESIS")
-            }
-
-            val clusters = parseCommentClusters(analysis.commentClustersJson)
-            clusters.forEach { cluster ->
+            // Actionable Recommendations
+            val recommendations = parseRecommendations(analysis.recommendationsJson)
+            if (recommendations.isNotEmpty()) {
                 item {
-                    CommentClusterCard(cluster = cluster)
+                    SectionHeader(title = "Actionable Recommendations", tag = "OPTIMIZATION")
+                }
+                recommendations.forEach { rec ->
+                    item {
+                        CyberCard(
+                            modifier = Modifier.fillMaxWidth(),
+                            backgroundColor = CyberDark
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .background(
+                                            if (rec.urgency == "HIGH") CyberRed else CyberCyan,
+                                            RoundedCornerShape(4.dp)
+                                        )
+                                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                                ) {
+                                    Text(
+                                        text = rec.category,
+                                        fontFamily = MonospaceFont,
+                                        fontSize = 9.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = PureBlack
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Text(
+                                    text = rec.actionText,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = OffWhite,
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                        }
+                    }
                 }
             }
 
@@ -388,7 +481,7 @@ fun YouTubeScreen(
             item {
                 Spacer(modifier = Modifier.height(6.dp))
                 CyberButton(
-                    text = "Dispatch Intelligence Briefing via Gmail",
+                    text = "Dispatch Complete Video Dossier via Gmail",
                     onClick = { viewModel.dispatchExecutiveBriefingViaGmail(context) },
                     modifier = Modifier.fillMaxWidth(),
                     isPrimary = true,
@@ -422,7 +515,12 @@ private fun PresetChip(label: String, onClick: () -> Unit) {
 }
 
 @Composable
-private fun PersonaCard(persona: PersonaSimulation) {
+private fun AnalyticalCard(
+    title: String,
+    score: String,
+    description: String,
+    accentColor: androidx.compose.ui.graphics.Color
+) {
     CyberCard(
         modifier = Modifier.fillMaxWidth(),
         backgroundColor = SurfaceDark
@@ -434,66 +532,25 @@ private fun PersonaCard(persona: PersonaSimulation) {
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = persona.persona.uppercase(),
+                    text = title.uppercase(),
                     fontFamily = MonospaceFont,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 12.sp,
+                    fontSize = 11.sp,
                     color = PureWhite
                 )
                 Text(
-                    text = "Satisfaction: ${persona.score}/100",
+                    text = score,
                     fontFamily = MonospaceFont,
                     fontSize = 11.sp,
-                    color = CyberGreen
+                    fontWeight = FontWeight.Bold,
+                    color = accentColor
                 )
             }
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "Watch Completion Estimate: ${persona.expectedCompletion}%",
-                fontFamily = MonospaceFont,
-                fontSize = 10.sp,
-                color = CyberCyan
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = persona.behavioralFeedback,
+                text = description,
                 style = MaterialTheme.typography.bodySmall,
                 color = OffWhite
-            )
-        }
-    }
-}
-
-@Composable
-private fun CommentClusterCard(cluster: CommentCluster) {
-    CyberCard(
-        modifier = Modifier.fillMaxWidth(),
-        backgroundColor = CyberDark
-    ) {
-        Column(modifier = Modifier.padding(12.dp)) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = cluster.theme,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = PureWhite
-                )
-                Text(
-                    text = "${cluster.percentage}% Volume",
-                    fontFamily = MonospaceFont,
-                    fontSize = 11.sp,
-                    color = CyberCyan
-                )
-            }
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "Tone: ${cluster.sentimentTone} – ${cluster.sampleSummary}",
-                style = MaterialTheme.typography.bodySmall,
-                color = TextMuted
             )
         }
     }
@@ -516,19 +573,13 @@ private fun parseRetentionPoints(json: String): List<RetentionPoint> {
     }
 }
 
-private fun parsePersonas(json: String): List<PersonaSimulation> {
+private fun parseTitleVariations(json: String): List<TitleVariation> {
     if (json.isBlank()) return emptyList()
     return try {
         json.split(";").mapNotNull { part ->
             val tokens = part.split("|")
-            if (tokens.size >= 5) {
-                PersonaSimulation(
-                    persona = tokens[0],
-                    sentiment = tokens[1],
-                    score = tokens[2].toIntOrNull() ?: 70,
-                    expectedCompletion = tokens[3].toIntOrNull() ?: 60,
-                    behavioralFeedback = tokens[4]
-                )
+            if (tokens.size >= 3) {
+                TitleVariation(concept = tokens[0], predictedCtrLift = tokens[1], rationale = tokens[2])
             } else null
         }
     } catch (e: Exception) {
@@ -536,18 +587,13 @@ private fun parsePersonas(json: String): List<PersonaSimulation> {
     }
 }
 
-private fun parseCommentClusters(json: String): List<CommentCluster> {
+private fun parseRecommendations(json: String): List<RecommendationItem> {
     if (json.isBlank()) return emptyList()
     return try {
         json.split(";").mapNotNull { part ->
             val tokens = part.split("|")
-            if (tokens.size >= 4) {
-                CommentCluster(
-                    theme = tokens[0],
-                    percentage = tokens[1].toIntOrNull() ?: 25,
-                    sentimentTone = tokens[2],
-                    sampleSummary = tokens[3]
-                )
+            if (tokens.size >= 3) {
+                RecommendationItem(category = tokens[0], urgency = tokens[1], actionText = tokens[2])
             } else null
         }
     } catch (e: Exception) {

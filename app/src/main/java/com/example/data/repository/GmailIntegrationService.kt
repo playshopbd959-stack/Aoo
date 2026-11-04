@@ -24,17 +24,19 @@ class GmailIntegrationService {
         val timestamp = dateFormat.format(Date())
 
         val videoSection = if (recentAnalysis != null) {
+            val statusTag = if (recentAnalysis.isVerifiedApiData) "[VERIFIED API DATA]" else "[ESTIMATED / EMBED]"
             """
             ------------------------------------------------------------
-            LATEST YOUTUBE MULTI-AGENT SIMULATION
+            LATEST YOUTUBE REAL AGENT ANALYSIS $statusTag
             ------------------------------------------------------------
             Title: ${recentAnalysis.title}
             Channel: ${recentAnalysis.channelTitle}
-            Simulated Nodes: ${recentAnalysis.agentsInvolvedCount} Agents
-            Hook Score: ${recentAnalysis.overallHookScore}/100
-            Viral Potential Index: ${recentAnalysis.viralPotentialScore}/100
-            Sentiment Ratio: ${(recentAnalysis.sentimentRatio * 100).toInt()}% Positive
-            Audience Breakdown: Gen-Z (88%), Tech Pro (92%), Casual (64%)
+            Views: ${if (recentAnalysis.viewCount > 0) recentAnalysis.viewCount.toString() else "N/A (oEmbed)"} | Likes: ${if (recentAnalysis.likeCount > 0) recentAnalysis.likeCount.toString() else "N/A"}
+            Title Analysis Score: ${recentAnalysis.titleAnalysisScore}/100 (${recentAnalysis.titleFeedback})
+            Description SEO Score: ${recentAnalysis.descriptionAnalysisScore}/100
+            Intro Pacing Score: ${recentAnalysis.introPacingScore}/100
+            Intro Weak Point: ${recentAnalysis.introWeakPointWarning ?: "None detected (smooth retention hook)"}
+            Duration: ${recentAnalysis.durationText}
             """.trimIndent()
         } else {
             "No recent video analyses completed in this session."

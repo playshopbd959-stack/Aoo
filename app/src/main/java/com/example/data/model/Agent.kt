@@ -4,11 +4,14 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 enum class AgentStatus(val label: String) {
-    ACTIVE("Active"),
-    PROCESSING("Processing"),
+    WORKING("Working"),
     IDLE("Idle"),
     PAUSED("Paused"),
-    ERROR("Error")
+    FAILED("Failed"),
+    COMPLETED("Completed"),
+    ACTIVE("Active"),       // legacy compat
+    PROCESSING("Working"),  // legacy compat
+    ERROR("Failed")         // legacy compat
 }
 
 enum class AgentCluster(val displayName: String, val description: String) {
@@ -33,5 +36,6 @@ data class AgentEntity(
     val successRate: Float = 100.0f,
     val loadPercent: Int = 0,
     val currentTask: String = "Standby",
-    val lastActive: Long = System.currentTimeMillis()
+    val lastActive: Long = System.currentTimeMillis(),
+    val lastExecutionOutput: String? = null
 )

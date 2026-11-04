@@ -1,5 +1,6 @@
 package com.example.data.repository
 
+import com.example.data.database.AccountDao
 import com.example.data.database.AgentDao
 import com.example.data.database.LogDao
 import com.example.data.database.TaskDao
@@ -7,6 +8,7 @@ import com.example.data.database.VideoDao
 import com.example.data.model.AgentCluster
 import com.example.data.model.AgentEntity
 import com.example.data.model.AgentStatus
+import com.example.data.model.GoogleAccountEntity
 import com.example.data.model.LogEventEntity
 import com.example.data.model.LogSeverity
 import com.example.data.model.TaskEntity
@@ -21,21 +23,27 @@ class AgentRepository(
     private val agentDao: AgentDao,
     private val taskDao: TaskDao,
     private val logDao: LogDao,
-    private val videoDao: VideoDao
+    private val videoDao: VideoDao,
+    private val accountDao: AccountDao
 ) {
     val allAgents: Flow<List<AgentEntity>> = agentDao.getAllAgents()
     val allTasks: Flow<List<TaskEntity>> = taskDao.getAllTasks()
     val recentLogs: Flow<List<LogEventEntity>> = logDao.getRecentLogs(100)
     val allVideoAnalyses: Flow<List<VideoAnalysisEntity>> = videoDao.getAllAnalyses()
+    val allAccounts: Flow<List<GoogleAccountEntity>> = accountDao.getAllAccounts()
 
     val completedTasksCount: Flow<Int> = taskDao.countCompletedTasks()
     val failedTasksCount: Flow<Int> = taskDao.countFailedTasks()
 
-    val activeCount: Flow<Int> = agentDao.countByStatus(AgentStatus.ACTIVE.name)
+    val workingCount: Flow<Int> = agentDao.countByStatus(AgentStatus.WORKING.name)
     val pausedCount: Flow<Int> = agentDao.countByStatus(AgentStatus.PAUSED.name)
-    val errorCount: Flow<Int> = agentDao.countByStatus(AgentStatus.ERROR.name)
+    val failedCount: Flow<Int> = agentDao.countByStatus(AgentStatus.FAILED.name)
     val idleCount: Flow<Int> = agentDao.countByStatus(AgentStatus.IDLE.name)
-    val processingCount: Flow<Int> = agentDao.countByStatus(AgentStatus.PROCESSING.name)
+    val completedCount: Flow<Int> = agentDao.countByStatus(AgentStatus.COMPLETED.name)
+
+    suspend fun allAgentsSnapshot(): List<AgentEntity> = withContext(Dispatchers.IO) {
+        agentDao.getAllAgentsList()
+    }
 
     suspend fun initializeAgentsIfNeeded() = withContext(Dispatchers.IO) {
         val existingCount = agentDao.countTotal()
@@ -63,26 +71,18 @@ class AgentRepository(
                 val subNumber = ((i - 1) / namePrefixes.size) + 1
                 val name = "$prefix-$subNumber"
 
-                // Initial state
-                val initialStatus = if (i % 25 == 0) AgentStatus.IDLE.name else AgentStatus.ACTIVE.name
-                val completed = Random.nextInt(20, 180)
-                val failed = if (Random.nextInt(10) > 7) Random.nextInt(1, 4) else 0
-                val successRate = if (completed + failed > 0) {
-                    ((completed.toFloat() / (completed + failed)) * 100f).coerceIn(85f, 100f)
-                } else 100f
-
                 agents.add(
                     AgentEntity(
                         id = id,
                         name = name,
                         cluster = cluster.name,
-                        status = initialStatus,
-                        completedTasks = completed,
-                        failedTasks = failed,
-                        successRate = String.format(Locale.US, "%.1f", successRate).toFloat(),
-                        loadPercent = Random.nextInt(5, 45),
+                        status = AgentStatus.IDLE.name,
+                        completedTasks = 0,
+                        failedTasks = 0,
+                        successRate = 100.0f,
+                        loadPercent = 0,
                         currentTask = "Standby telemetry node",
-                        lastActive = System.currentTimeMillis() - Random.nextLong(1000, 60000)
+                        lastActive = System.currentTimeMillis()
                     )
                 )
             }
@@ -96,10 +96,58 @@ class AgentRepository(
                 LogEventEntity(
                     agentId = "SYSTEM",
                     severity = LogSeverity.INFO.name,
-                    message = "XSOS Core initialized. 1,000 independent multi-agents online across 7 clusters."
+                    message = "XSOS Real Multi-Agent V2 initialized. 1,000 discrete agents registered in database."
                 )
             )
         }
+
+        // Initialize default primary Google Account if empty
+        if (accountDao.countAccounts() == 0) {
+            accountDao.insertAccount(
+                GoogleAccountEntity(
+                    email = "sayumnahian@gmail.com",
+                    displayName = "Sayum Nahian (Operator)",
+                    authorizedScopes = "https://www.googleapis.com/auth/youtube.readonly, https://www.googleapis.com/auth/gmail.send",
+                    isConnected = true,
+                    accountType = "Verified Google OAuth Account"
+                )
+            )
+        }
+    }
+
+    suspend fun getAgentIdsForTask(cluster: String, count: Int): List<String> = withContext(Dispatchers.IO) {
+        val all = if (cluster == "ALL") {
+            agentDao.getAllAgentIds()
+        } else {
+            agentDao.getAgentsByCluster(cluster).let { agentDao.getAllAgentsList().filter { it.cluster == cluster }.map { it.id } }
+        }
+        all.take(count)
+    }
+
+    suspend fun updateAgentExecution(id: String, status: String, task: String, load: Int, output: String?) = withContext(Dispatchers.IO) {
+        agentDao.updateAgentExecution(id, status, task, load, output)
+    }
+
+    suspend fun recordAgentSuccess(id: String, output: String) = withContext(Dispatchers.IO) {
+        agentDao.recordTaskSuccess(id, output)
+        logDao.insertLog(
+            LogEventEntity(
+                agentId = id,
+                severity = LogSeverity.SUCCESS.name,
+                message = "Agent $id completed calculation: $output"
+            )
+        )
+    }
+
+    suspend fun recordAgentFailure(id: String, errorMsg: String) = withContext(Dispatchers.IO) {
+        agentDao.recordTaskFailure(id, errorMsg)
+        logDao.insertLog(
+            LogEventEntity(
+                agentId = id,
+                severity = LogSeverity.ERROR.name,
+                message = "Agent $id failed execution: $errorMsg"
+            )
+        )
     }
 
     fun getAgentsByCluster(cluster: String): Flow<List<AgentEntity>> = agentDao.getAgentsByCluster(cluster)
@@ -113,23 +161,19 @@ class AgentRepository(
         logDao.insertLog(
             LogEventEntity(
                 agentId = id,
-                severity = if (status == AgentStatus.ERROR) LogSeverity.ERROR.name else LogSeverity.INFO.name,
+                severity = if (status == AgentStatus.FAILED) LogSeverity.ERROR.name else LogSeverity.INFO.name,
                 message = "Agent $id state changed to ${status.label} ($task)"
             )
         )
     }
 
-    suspend fun updateAgent(agent: AgentEntity) = withContext(Dispatchers.IO) {
-        agentDao.updateAgent(agent)
-    }
-
     suspend fun startAllAgents() = withContext(Dispatchers.IO) {
-        agentDao.updateAllStatus(AgentStatus.ACTIVE.name, "Active monitoring")
+        agentDao.updateAllStatus(AgentStatus.IDLE.name, "Active monitoring")
         logDao.insertLog(
             LogEventEntity(
                 agentId = "ORCHESTRATOR",
                 severity = LogSeverity.SUCCESS.name,
-                message = "All 1,000 agents transitioned to ACTIVE state."
+                message = "All 1,000 agents set to IDLE / ready state."
             )
         )
     }
@@ -146,7 +190,7 @@ class AgentRepository(
     }
 
     suspend fun restartAllAgents() = withContext(Dispatchers.IO) {
-        agentDao.updateAllStatus(AgentStatus.ACTIVE.name, "Subsystem Rebooted")
+        agentDao.updateAllStatus(AgentStatus.IDLE.name, "Subsystem Rebooted")
         logDao.insertLog(
             LogEventEntity(
                 agentId = "ORCHESTRATOR",
@@ -163,7 +207,7 @@ class AgentRepository(
                 LogEventEntity(
                     agentId = "WATCHDOG",
                     severity = LogSeverity.RECOVERY.name,
-                    message = "Auto-recovery watchdog restored $recovered agents from ERROR state."
+                    message = "Auto-recovery watchdog restored $recovered agents from failure state."
                 )
             )
         }
@@ -171,7 +215,7 @@ class AgentRepository(
     }
 
     suspend fun injectChaosError(id: String) = withContext(Dispatchers.IO) {
-        agentDao.updateAgentStatus(id, AgentStatus.ERROR.name, "Simulated memory buffer overflow")
+        agentDao.recordTaskFailure(id, "Simulated memory buffer overflow / timeout")
         logDao.insertLog(
             LogEventEntity(
                 agentId = id,
@@ -210,13 +254,32 @@ class AgentRepository(
         taskDao.updateTaskProgress(id, progress, status, completedAt, execTime, result)
     }
 
-    suspend fun getRandomAvailableAgents(limit: Int): List<AgentEntity> = withContext(Dispatchers.IO) {
-        agentDao.getRandomAvailableAgents(limit)
-    }
-
     suspend fun saveVideoAnalysis(analysis: VideoAnalysisEntity) = withContext(Dispatchers.IO) {
         videoDao.insertAnalysis(analysis)
     }
 
     fun getVideoAnalysis(id: String): Flow<VideoAnalysisEntity?> = videoDao.getAnalysisById(id)
+
+    // Multi-Account Operations
+    suspend fun addGoogleAccount(account: GoogleAccountEntity) = withContext(Dispatchers.IO) {
+        accountDao.insertAccount(account)
+        logDao.insertLog(
+            LogEventEntity(
+                agentId = "OAUTH_GATEWAY",
+                severity = LogSeverity.SUCCESS.name,
+                message = "Authorized Google Account added: ${account.email}"
+            )
+        )
+    }
+
+    suspend fun removeGoogleAccount(email: String) = withContext(Dispatchers.IO) {
+        accountDao.deleteAccount(email)
+        logDao.insertLog(
+            LogEventEntity(
+                agentId = "OAUTH_GATEWAY",
+                severity = LogSeverity.WARN.name,
+                message = "Google Account disconnected: $email"
+            )
+        )
+    }
 }

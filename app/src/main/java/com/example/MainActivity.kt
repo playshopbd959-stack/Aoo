@@ -164,16 +164,14 @@ fun XSOSApp(viewModel: MainViewModel) {
         )
     }
 
-    // Gmail Auth Dialog
+    // Gmail / Google Account Gateway Dialog
     if (showGmailDialog) {
+        val context = androidx.compose.ui.platform.LocalContext.current
         GmailAuthDialog(
-            config = gmailConfig,
+            viewModel = viewModel,
             onDismiss = { showGmailDialog = false },
-            onSave = { email, autoDaily ->
-                viewModel.updateGmailConfig(email, autoDaily)
-            },
             onDispatchTest = {
-                // context handled inside MainViewModel
+                viewModel.dispatchExecutiveBriefingViaGmail(context)
             }
         )
     }

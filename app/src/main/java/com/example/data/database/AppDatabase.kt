@@ -5,6 +5,7 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.example.data.model.AgentEntity
+import com.example.data.model.GoogleAccountEntity
 import com.example.data.model.LogEventEntity
 import com.example.data.model.TaskEntity
 import com.example.data.model.VideoAnalysisEntity
@@ -14,9 +15,10 @@ import com.example.data.model.VideoAnalysisEntity
         AgentEntity::class,
         TaskEntity::class,
         LogEventEntity::class,
-        VideoAnalysisEntity::class
+        VideoAnalysisEntity::class,
+        GoogleAccountEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -24,6 +26,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun taskDao(): TaskDao
     abstract fun logDao(): LogDao
     abstract fun videoDao(): VideoDao
+    abstract fun accountDao(): AccountDao
 
     companion object {
         @Volatile

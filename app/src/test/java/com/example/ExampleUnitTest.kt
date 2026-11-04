@@ -5,7 +5,7 @@ import com.example.data.model.AgentStatus
 import com.example.data.model.TaskPriority
 import com.example.data.model.TaskType
 import com.example.data.model.ThrottleMode
-import com.example.data.repository.YouTubeService
+import com.example.data.repository.RealYouTubeService
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -27,7 +27,23 @@ class ExampleUnitTest {
 
   @Test
   fun verifyAgentStatuses() {
-    assertEquals(5, AgentStatus.values().size)
+    assertEquals(8, AgentStatus.values().size)
+    assertTrue(AgentStatus.values().any { it.name == "WORKING" })
+    assertTrue(AgentStatus.values().any { it.name == "IDLE" })
+    assertTrue(AgentStatus.values().any { it.name == "PAUSED" })
+    assertTrue(AgentStatus.values().any { it.name == "FAILED" })
+    assertTrue(AgentStatus.values().any { it.name == "COMPLETED" })
+  }
+
+  @Test
+  fun verifyAgentIdFormat() {
+    val agentNumber = 42
+    val formattedId = "AGT-%04d".format(agentNumber)
+    assertEquals("AGT-0042", formattedId)
+
+    val maxAgent = 1000
+    val maxId = "AGT-%04d".format(maxAgent)
+    assertEquals("AGT-1000", maxId)
   }
 
   @Test
@@ -39,7 +55,7 @@ class ExampleUnitTest {
 
   @Test
   fun verifyYouTubeVideoIdExtraction() {
-    val service = YouTubeService()
+    val service = RealYouTubeService()
     val id1 = service.extractVideoId("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
     val id2 = service.extractVideoId("https://youtu.be/dQw4w9WgXcQ")
     val id3 = service.extractVideoId("https://www.youtube.com/shorts/dQw4w9WgXcQ")
